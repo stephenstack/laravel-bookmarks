@@ -35,12 +35,8 @@ export function initializeStore(
     collections: Collection[],
     tags: Tag[],
 ) {
-    // Separate active, archived, and trashed if backend doesn't pre-separate
-    // For now, assuming initialBookmarks is the active list (index)
-    // Real implementation: Controller should probably send separated lists or 'deleted_at' field is checked here
-    state.bookmarks = initialBookmarks.filter((b) => !b.deleted_at);
-    state.archivedBookmarks = []; // Need backend support for archive flag if different from trash
-    state.trashedBookmarks = initialBookmarks.filter((b) => b.deleted_at);
+    // Put all bookmarks into one list and let the filtering logic handle the views
+    state.bookmarks = initialBookmarks;
     state.collections = collections;
     state.tags = tags;
 
@@ -148,9 +144,18 @@ export function useBookmarksStore() {
             const originalValue = bookmark.is_favorite;
             bookmark.is_favorite = !originalValue;
 
+            const url =
+                typeof bookmarkId === 'string' &&
+                bookmarkId.startsWith('company-')
+                    ? `/bookmarks/company/${bookmarkId}/favorite`
+                    : `/bookmarks/${bookmarkId}`;
+
             router.post(
-                `/bookmarks/${bookmarkId}`,
-                { _method: 'put', is_favorite: bookmark.is_favorite },
+                url,
+                {
+                    _method: url.includes('company') ? 'post' : 'put',
+                    is_favorite: bookmark.is_favorite,
+                },
                 {
                     preserveScroll: true,
                     onError: () => {
@@ -229,11 +234,13 @@ export function useBookmarksStore() {
         if (state.pageMode === 'archive') {
             filtered = state.bookmarks.filter((b) => b.status === 'archived');
         } else if (state.pageMode === 'trash') {
-            filtered = state.bookmarks.filter((b) => b.status === 'trashed');
-        } else {
-            // Index mode - show only active bookmarks
             filtered = state.bookmarks.filter(
-                (b) => !b.status || b.status === 'active',
+                (b) => b.status === 'trashed' || b.deleted_at,
+            );
+        } else {
+            // Index mode - show only active bookmarks that are NOT deleted
+            filtered = state.bookmarks.filter(
+                (b) => (!b.status || b.status === 'active') && !b.deleted_at,
             );
         }
 

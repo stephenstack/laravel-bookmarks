@@ -221,17 +221,17 @@ const getCollectionIcon = (iconName: string) => {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 as-child
-                                :is-active="store.selectedCollection === 'all' && store.pageMode === 'index'"
+                                :is-active="store.selectedCollection === 'all' && store.pageMode === 'index' && store.filterType === 'all'"
                                 class="h-[38px]"
                             >
                                 <Link href="/bookmarks/all">
                                     <LucideIcons.LayoutGrid class="size-5" />
                                     <span class="flex-1">All Bookmarks</span>
                                     <span class="text-xs text-muted-foreground">
-                                        {{ store.bookmarks.filter(b => !b.status || b.status === 'active').length }}
+                                        {{ store.bookmarks.filter(b => (!b.status || b.status === 'active') && !b.deleted_at).length }}
                                     </span>
                                     <LucideIcons.ChevronRight
-                                        v-if="store.selectedCollection === 'all' && store.pageMode === 'index'"
+                                        v-if="store.selectedCollection === 'all' && store.pageMode === 'index' && store.filterType === 'all'"
                                         class="size-4 text-muted-foreground opacity-60"
                                     />
                                 </Link>
@@ -332,7 +332,10 @@ const getCollectionIcon = (iconName: string) => {
                             >
                                 <Link href="/bookmarks/favorites">
                                     <LucideIcons.Star class="size-5" />
-                                    <span>Favorites</span>
+                                    <span class="flex-1">Favorites</span>
+                                    <span class="text-xs text-muted-foreground">
+                                        {{ store.bookmarks.filter(b => b.is_favorite && (!b.status || b.status === 'active')).length }}
+                                    </span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -344,7 +347,10 @@ const getCollectionIcon = (iconName: string) => {
                             >
                                 <Link href="/bookmarks/archive">
                                     <LucideIcons.Archive class="size-5" />
-                                    <span>Archive</span>
+                                    <span class="flex-1">Archive</span>
+                                    <span class="text-xs text-muted-foreground">
+                                        {{ store.bookmarks.filter(b => b.status === 'archived').length }}
+                                    </span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -356,7 +362,10 @@ const getCollectionIcon = (iconName: string) => {
                             >
                                 <Link href="/bookmarks/trash">
                                     <LucideIcons.Trash2 class="size-5" />
-                                    <span>Trash</span>
+                                    <span class="flex-1">Trash</span>
+                                    <span class="text-xs text-muted-foreground">
+                                        {{ store.bookmarks.filter(b => b.status === 'trashed').length }}
+                                    </span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

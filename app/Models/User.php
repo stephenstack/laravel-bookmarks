@@ -62,4 +62,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Bookmark::class);
     }
+
+    public function favoriteCompanyBookmarks()
+    {
+        return $this->belongsToMany(CompanyBookmark::class, 'company_bookmark_favorites');
+    }
 }

@@ -29,10 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('bookmarks/upload-image', [App\Http\Controllers\Bookmarks\ImageUploadController::class, 'upload'])->name('bookmarks.upload-image');
     Route::delete('bookmarks/delete-image', [App\Http\Controllers\Bookmarks\ImageUploadController::class, 'delete'])->name('bookmarks.delete-image');
     
-    Route::post('bookmarks/{bookmark}/archive', [BookmarkController::class, 'archive'])->name('bookmarks.archive');
-    Route::post('bookmarks/{bookmark}/unarchive', [BookmarkController::class, 'unarchive'])->name('bookmarks.unarchive');
-    Route::post('bookmarks/{bookmark}/trash', [BookmarkController::class, 'trash'])->name('bookmarks.trash');
-    Route::post('bookmarks/{bookmark}/restore', [BookmarkController::class, 'restore'])->name('bookmarks.restore');
+    Route::post('bookmarks/{bookmark}/archive', [BookmarkController::class, 'archive'])->name('bookmarks.archive.action');
+    Route::post('bookmarks/{bookmark}/unarchive', [BookmarkController::class, 'unarchive'])->name('bookmarks.unarchive.action');
+    Route::post('bookmarks/{bookmark}/trash', [BookmarkController::class, 'trash'])->name('bookmarks.trash.action');
+    Route::post('bookmarks/{bookmark}/restore', [BookmarkController::class, 'restore'])->name('bookmarks.restore.action');
+    
+    Route::post('bookmarks/company/{id}/favorite', [BookmarkController::class, 'toggleCompanyFavorite'])->name('bookmarks.company.favorite');
     
     Route::resource('bookmarks', BookmarkController::class)->only(['store', 'update', 'destroy']);
     Route::resource('collections', App\Http\Controllers\Bookmarks\CollectionController::class)->only(['store', 'update', 'destroy']);

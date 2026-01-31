@@ -49,6 +49,7 @@ const filteredBookmarks = computed(() => getFilteredBookmarks());
 const pageTitle = computed(() => {
     if (store.pageMode === 'archive') return 'Archive';
     if (store.pageMode === 'trash') return 'Trash';
+    if (store.filterType === 'favorites') return 'Favorites';
     return store.collections.find((c) => String(c.id) === store.selectedCollection)?.name || 'All Bookmarks';
 });
 

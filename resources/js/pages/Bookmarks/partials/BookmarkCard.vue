@@ -70,36 +70,34 @@ const handleOpenUrl = () => {
         </div>
 
         <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-                <h3 class="truncate font-medium">{{ bookmark.title }}</h3>
-                <div
-                    v-if="bookmarkTags.length > 0"
-                    class="hidden items-center gap-1 sm:flex"
-                >
-                    <span
-                        v-for="tag in bookmarkTags.slice(0, 2)"
-                        :key="tag.id"
-                        class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium border border-transparent"
-                        :class="getTagColorClass(tag.color)"
-                    >
-                        {{ tag.name }}
-                    </span>
-                    <span
-                        v-if="bookmarkTags.length > 2"
-                        class="text-[10px] text-muted-foreground"
-                    >
-                        +{{ bookmarkTags.length - 2 }}
-                    </span>
-                </div>
-            </div>
+            <h3 class="truncate font-medium">{{ bookmark.title }}</h3>
             <p class="truncate text-sm text-muted-foreground">
                 {{ bookmark.url }}
             </p>
         </div>
 
+        <div
+            v-if="bookmarkTags.length > 0"
+            class="hidden items-center gap-1 sm:flex ml-auto mr-2"
+        >
+            <span
+                v-for="tag in bookmarkTags.slice(0, 2)"
+                :key="tag.id"
+                class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium border border-transparent"
+                :class="getTagColorClass(tag.color)"
+            >
+                {{ tag.name }}
+            </span>
+            <span
+                v-if="bookmarkTags.length > 2"
+                class="text-[10px] text-muted-foreground"
+            >
+                +{{ bookmarkTags.length - 2 }}
+            </span>
+        </div>
+
         <div class="flex items-center gap-1">
             <Button
-                v-if="!bookmark.is_company"
                 variant="ghost"
                 size="icon"
                 class="h-8 w-8"
@@ -188,7 +186,6 @@ const handleOpenUrl = () => {
     >
         <div class="absolute right-3 top-3 z-10 flex items-center gap-1">
             <Button
-                v-if="!bookmark.is_company"
                 variant="secondary"
                 size="icon"
                 class="h-8 w-8 bg-background/80 backdrop-blur-sm"
@@ -307,16 +304,20 @@ const handleOpenUrl = () => {
                             </div>
                         </div>
 
-                        <div class="p-4 flex flex-col h-[60px] relative group/info">
-                            <div class="flex items-start justify-between gap-2 overflow-hidden">
-                                <h3 class="truncate font-medium text-sm sm:text-base group-hover:text-primary transition-colors">{{ bookmark.title }}</h3>
+                        <div class="p-3 flex items-center justify-between gap-2 overflow-hidden bg-muted/20">
+                            <!-- Title with Black BG -->
+                            <div class="flex shrink-0 max-w-[50%]">
+                                <div class="bg-zinc-950 dark:bg-zinc-950 text-white px-2.5 py-1 rounded-md shadow-lg ring-1 ring-white/10 w-full">
+                                    <h3 class="truncate font-bold text-[11px] uppercase tracking-wide leading-tight">{{ bookmark.title }}</h3>
+                                </div>
                             </div>
                             
-                            <div v-if="bookmarkTags.length > 0" class="flex flex-wrap gap-1 mt-auto">
+                            <!-- Tags to the Right -->
+                            <div v-if="bookmarkTags.length > 0" class="flex flex-wrap justify-end gap-1 min-w-0">
                                 <span
-                                    v-for="tag in bookmarkTags.slice(0, 3)"
+                                    v-for="tag in bookmarkTags.slice(0, 2)"
                                     :key="tag.id"
-                                    class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-medium border border-transparent"
+                                    class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-medium border border-transparent whitespace-nowrap"
                                     :class="getTagColorClass(tag.color)"
                                 >
                                     {{ tag.name }}

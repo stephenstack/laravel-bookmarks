@@ -3,70 +3,71 @@
 namespace App\Http\Controllers\Bookmarks;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\Bookmark;
 use App\Models\Collection;
-use App\Models\CompanyBookmark;
 use App\Models\Tag;
+use App\Models\CompanyBookmark;
 use App\Models\Setting;
-use Inertia\Inertia;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TestMail;
 
 class BookmarkController extends Controller
 {
     public function interrogateUrl(Request $request)
     {
         $request->validate(['url' => 'required|url']);
-        $url = $request->url;
 
         try {
-            $response = Http::withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            ])->timeout(20)->get("https://api.microlink.io/", [
-                'url' => $url,
-                'screenshot' => true,
-                'meta' => true
-            ]);
+            $client = new \GuzzleHttp\Client(['timeout' => 5, 'verify' => false]);
+            $response = $client->get($request->url);
+            $html = (string) $response->getBody();
 
-            if ($response->successful()) {
-                $data = $response->json()['data'] ?? [];
-                $image = $data['image']['url'] ?? $data['screenshot']['url'] ?? null;
-                if (!$image) {
-                    $image = "https://image.thum.io/get/width/1200/crop/675/" . $url;
-                }
-                return response()->json([
-                    'title' => trim($data['title'] ?? ''),
-                    'description' => trim($data['description'] ?? ''),
-                    'image_url' => $image,
-                    'favicon' => $data['logo']['url'] ?? "https://www.google.com/s2/favicons?sz=128&domain_url=" . urlencode($url),
-                ]);
+            $title = '';
+            if (preg_match('/<title>(.*?)<\/title>/is', $html, $matches)) {
+                $title = trim($matches[1]);
             }
 
-            // Fallback
-            $response = Http::timeout(10)->get($url);
-            $html = $response->body();
-            $dom = new \DOMDocument();
-            @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
-            $xpath = new \DOMXPath($dom);
-            $title = $xpath->query('//title')->item(0)?->nodeValue;
-            $description = $xpath->query('//meta[@name="description"]/@content')->item(0)?->nodeValue 
-                        ?? $xpath->query('//meta[@property="og:description"]/@content')->item(0)?->nodeValue
-                        ?? $xpath->query('//meta[@name="twitter:description"]/@content')->item(0)?->nodeValue;
-            $image = $xpath->query('//meta[@property="og:image"]/@content')->item(0)?->nodeValue
-                    ?? $xpath->query('//meta[@name="twitter:image"]/@content')->item(0)?->nodeValue;
-            if (!$image) {
-                $image = "https://image.thum.io/get/width/1200/crop/675/" . $url;
+            $description = '';
+            if (preg_match('/<meta name="description" content="(.*?)"/is', $html, $matches)) {
+                $description = trim($matches[1]);
+            } elseif (preg_match('/<meta property="og:description" content="(.*?)"/is', $html, $matches)) {
+                $description = trim($matches[1]);
             }
+
+            $favicon = '';
+            $parsedUrl = parse_url($request->url);
+            $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+            
+            if (preg_match('/<link rel="(?:shortcut )?icon" [^>]*?href="(.*?)"/is', $html, $matches)) {
+                $favicon = $matches[1];
+            } elseif (preg_match('/<link [^>]*?href="(.*?)" [^>]*?rel="(?:shortcut )?icon"/is', $html, $matches)) {
+                $favicon = $matches[1];
+            }
+            
+            if ($favicon && !filter_var($favicon, FILTER_VALIDATE_URL)) {
+                $favicon = rtrim($baseUrl, '/') . '/' . ltrim($favicon, '/');
+            }
+            
+            if (!$favicon) {
+                $favicon = $baseUrl . '/favicon.ico';
+            }
+
+            $imageUrl = '';
+            if (preg_match('/<meta property="og:image" content="(.*?)"/is', $html, $matches)) {
+                $imageUrl = $matches[1];
+            }
+
             return response()->json([
-                'title' => trim($title ?? ''),
-                'description' => trim($description ?? ''),
-                'image_url' => $image,
-                'favicon' => "https://www.google.com/s2/favicons?sz=128&domain_url=" . urlencode($url),
+                'title' => html_entity_decode($title),
+                'description' => html_entity_decode($description),
+                'favicon' => $favicon,
+                'image_url' => $imageUrl,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Could not interrogate URL'], 500);
+            return response()->json(['error' => 'Could not fetch URL info'], 422);
         }
     }
 
@@ -74,12 +75,12 @@ class BookmarkController extends Controller
     {
         $user = Auth::user();
         
-        // Fetch User Data
-        $bookmarks = $user->bookmarks()->orderBy('order')->with(['tags', 'collection'])->get();
+        // Fetch User Data - Include trashed so they are available in the store
+        $bookmarks = $user->bookmarks()->withTrashed()->orderBy('order')->with(['tags', 'collection'])->get();
         $collections = $user->collections()->orderBy('order')->withCount('bookmarks')->get();
         $tags = $user->tags()->withCount('bookmarks')->get();
         
-        // Fetch Company Tag Settings
+        // Fetch Company Settings
         $companyTagName = Setting::get('company_tag_name', 'Company');
         $companyTagColor = Setting::get('company_tag_color', 'blue');
         $companyTag = [
@@ -88,25 +89,27 @@ class BookmarkController extends Controller
             'color' => $companyTagColor,
         ];
 
-        // Fetch Company Data (to be merged seamlessly or separated)
-        $companyBookmarks = CompanyBookmark::all()->map(function ($item) use ($companyTag) {
+        $favoriteCompanyBookmarkIds = $user->favoriteCompanyBookmarks()->pluck('company_bookmarks.id')->toArray();
+        
+        $companyBookmarks = CompanyBookmark::all()->map(function ($item) use ($companyTag, $favoriteCompanyBookmarkIds) {
              return [
-                'id' => 'company-' . $item->id, // Unique ID to distinguish
+                'id' => 'company-' . $item->id,
                 'title' => $item->title,
                 'url' => $item->url,
                 'description' => $item->description,
                 'favicon' => $item->favicon,
                 'image_url' => $item->image_url,
-                'is_favorite' => false,
-                'collection_id' => 'company-resources', // Hardcoded ID for the collection
+                'is_favorite' => in_array($item->id, $favoriteCompanyBookmarkIds),
+                'collection_id' => 'company-resources',
                 'is_company' => true,
                 'tags' => [$companyTag],
                 'created_at' => $item->created_at,
                 'updated_at' => $item->updated_at,
+                'deleted_at' => null,
+                'status' => 'active'
              ];
         });
 
-        // Company Collection (virtual)
         $companyCollection = [
             'id' => 'company-resources',
             'name' => Setting::get('company_collection_title', 'Company Resources'),
@@ -117,38 +120,32 @@ class BookmarkController extends Controller
             'count' => $companyBookmarks->count(),
         ];
         
-        // Determine initial view based on route
-        $initialView = null;
+        // --- View Detection ---
+        $initialView = $request->route('view'); // This comes from defaults() in web.php
         $initialCollection = null;
         $initialTag = null;
         
         if ($slug) {
-            // Find collection by slug
-            $collection = $collections->firstWhere('slug', $slug);
-            if ($collection) {
-                $initialCollection = (string) $collection->id;
-            } elseif ($slug === 'company-resources') {
+            if ($slug === 'company-resources') {
                 $initialCollection = 'company-resources';
+            } else {
+                $collection = $collections->firstWhere('slug', $slug);
+                if ($collection) {
+                    $initialCollection = (string) $collection->id;
+                }
             }
         } elseif ($tag) {
             $tagModel = $tags->firstWhere('slug', $tag);
             if ($tagModel) {
                 $initialTag = $tagModel->id;
             }
-        } elseif ($view = $request->route()->defaults['view'] ?? null) {
-            if ($view === 'all') {
-                $initialCollection = 'all';
-            } else {
-                $initialView = $view;
-            }
+        } elseif (!$initialView) {
+            // Default if we just hit /dashboard or similar
+            $initialCollection = 'all';
         }
         
-        // Merge Bookmarks for display
-        // Note: In a real app, you might want to keep them separate in the store
-        // but for now we pass them as a merged list or separate prop
-        
         return Inertia::render('Bookmarks/Index', [
-            'initialBookmarks' => $bookmarks->concat($companyBookmarks),
+            'initialBookmarks' => $bookmarks->concat($companyBookmarks)->values()->all(),
             'collections' => $collections->map(function($c) {
                 $c->count = $c->bookmarks_count;
                 return $c;
@@ -298,6 +295,22 @@ class BookmarkController extends Controller
         $user->update([
             'preferences' => array_merge($preferences, $request->all())
         ]);
+
+        return redirect()->back();
+    }
+
+    public function toggleCompanyFavorite(Request $request, $id)
+    {
+        $user = Auth::user();
+        $id = str_replace('company-', '', $id);
+        
+        $exists = $user->favoriteCompanyBookmarks()->where('company_bookmark_id', $id)->exists();
+        
+        if ($exists) {
+            $user->favoriteCompanyBookmarks()->detach($id);
+        } else {
+            $user->favoriteCompanyBookmarks()->attach($id);
+        }
 
         return redirect()->back();
     }
