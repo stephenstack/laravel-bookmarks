@@ -13,7 +13,7 @@ test('bookmarks index page is displayed', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get('/dashboard')
+        ->get('/bookmarks/all')
         ->assertStatus(200)
         ->assertInertia(fn (Assert $page) => $page
             ->component('Bookmarks/Index')
@@ -30,6 +30,6 @@ test('bookmarks index loads user data', function () {
     Bookmark::factory()->create(['user_id' => $user->id]);
     
     $this->actingAs($user)
-        ->get('/dashboard')
+        ->get('/bookmarks/all')
         ->assertStatus(200);
 });

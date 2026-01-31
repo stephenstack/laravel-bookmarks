@@ -1,149 +1,108 @@
-# Homepage
+# Homepage v1.0.0
 
 A modern, fast, and customizable self-hosted start page for developers and power users. Built with Laravel, Vue.js, and Inertia, this application serves as your central hub for bookmarks, resources, and quick stats.
+
+> **Note**: This project was fully **vibe coded** in just a few hours.
+> Inspiration drawn from [Square UI Bookmarks](https://square-ui-bookmarks.vercel.app/) & [ln-dev7/square-ui](https://github.com/ln-dev7/square-ui).
 
 ## 🚀 Features
 
 - **Bookmark Management**: Organize your links into **Collections** and **Tags**.
-- **Smart Dashboard**: Customizable stats cards including:
-    - **Weather**: Live weather updates via Open-Meteo (no API key required) with 15-minute caching and city selection.
-    - **Clock**: Real-time digital clock with toggleable 12h/24h formats.
-    - **Stats**: Quick view of total bookmarks, favorites, and collections.
-    - **Recent & Archived**: Access your history and keep your main view clean.
-- **Search**: Fast search across all your bookmarks and tags.
-- **Dark/Light Mode**: Fully themable UI using Tailwind CSS v4.
-- **Drag & Drop**: Intuitive sorting for your collections.
-- **Collections**:
-    - **Slug-based Routing**: Shareable, clean URLs for your collections (e.g., `/bookmarks/collection/my-project`).
-    - **System Views**: Dedicated views for Favorites, Archive, and Trash.
-- **Privacy Focused**: Self-hosted means your data stays with you.
+- **Smart Dashboard**: Customizable stats cards including Weather, Clock, and Stats.
+- **Link Interrogation**: Automatically scrapes titles, descriptions, and high-quality images/favicons when adding a link.
+- **Search**: Fast global search (Ctrl+K).
+- **Dark/Light Mode**: Fully themable UI with support for custom background images and opacity.
+- **Company Resources**: Admins can set global links for all users (e.g., Company Wiki, HR Portal).
+- **System Views**: Dedicated views for Favorites, Archive, and Trash.
 
-## 🛠️ Tech Stack
+## 💿 Installation
 
-- **Backend**: [Laravel 12](https://laravel.com)
-- **Frontend**: [Vue 3](https://vuejs.org) (Composition API, TypeScript)
-- **Routing**: [Inertia.js 2.0](https://inertiajs.com)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com)
-- **Icons**: [Lucide](https://lucide.dev)
-- **Database**: SQLite (Default) / MySQL / PostgreSQL
-
-## 📦 Prerequisites
-
-Ensure you have the following installed on your server or local machine:
-
-- **PHP**: 8.2 or higher
-- **Node.js**: 20.x or higher
-- **Composer**: Latest version
-- **SQLite** (optional, but enabled by default)
-
-## 💿 Installation & Deployment
-
-### 1. Clone the Repository
+### 1. Clone & Install
 
 ```bash
-git clone https://github.com/yourusername/homepage.git
-cd homepage
-```
-
-### 2. Install Dependencies
-
-Install PHP backend dependencies:
-
-```bash
-composer install --optimize-autoloader --no-dev
-```
-
-Install Node.js frontend dependencies:
-
-```bash
+git clone https://github.com/stephenstack/laravel-bookmarks
+cd laravel-bookmarks
+composer install
 npm install
 ```
 
-### 3. Environment Setup
-
-Copy the example environment file:
+### 2. Environment & Key
 
 ```bash
 cp .env.example .env
-```
-
-Generate the application key:
-
-```bash
 php artisan key:generate
 ```
 
-### 4. Database Setup
-
-By default, the application uses SQLite. Create the database file:
+### 3. Database
 
 ```bash
 touch database/database.sqlite
+php artisan migrate --seed
 ```
 
-Run the migrations to create the database schema:
-
-```bash
-php artisan migrate --force
-```
-
-### 5. Build Assets
-
-Build the frontend assets for production:
+### 4. Build & Run
 
 ```bash
 npm run build
+php artisan serve
 ```
 
-### 6. Serving the Application
+## 👤 Admin Setup
 
-You can serve the application using PHP's built-in server (for testing) or a web server like Nginx/Apache.
-
-**Local Development:**
+To create your first admin user, use the built-in command:
 
 ```bash
-composer run dev
+php artisan make:admin
 ```
 
-(This runs `php artisan serve`, `npm run dev`, and queue workers concurrently)
+This will prompt you for your name, email, and password.
 
-**Production (Nginx Example):**
-Point your Nginx document root to the `public/` directory. Ensure proper permissions are set for `storage/` and `bootstrap/cache/`:
+## 📧 Email Setup
 
-```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
+For password resets and system notifications, configure your SMTP settings in the `.env` file:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-## 🎮 Usage
+You can test your email configuration in **Admin > Site Settings > Email Tab** using the "Send Test Email" button.
 
-1.  **Register/Login**: Create your admin account.
-2.  **Dashboard**: Click the **Settings (⚙️)** icon next to "DASHBOARD" to toggle visibility of cards (Weather, Clock, Stats).
-3.  **Add Bookmarks**: Use the **+ Add Bookmark** button. You can assign them to collections and add tags immediately.
-4.  **Organize**:
-    - **Archive**: Move old links to the archive to keep things tidy.
-    - **Trash**: Deleted items go to trash and can be restored or permanently deleted.
+## 🔗 Web Link Interrogation
 
-## 🤝 Contributing
+When you add a new bookmark, the system "interrogates" the URL. It uses a multi-layered approach to fetch the best metadata:
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. **Microlink API**: Attempts to get high-quality screenshots and structured meta.
+2. **Thum.io**: Fallback for clean site screenshots if no Open Graph image is found.
+3. **Google Favicon Service**: Ensures a high-resolution favicon is always present.
 
-## ❓ Troubleshooting
+## 🤝 Contribution Guide
 
-### File Upload Issues (Logos/Backgrounds)
+We love contributions!
 
-If uploaded images (logos, backgrounds) do not appear or save as "null", your PHP `upload_max_filesize` or `post_max_size` settings may be too low (default is often 2MB).
+1. Fork the repo.
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).
+3. **Write Tests**: Ensure your feature is covered by automated tests.
+4. **Run Tests**: Verify everything is passing before submitting.
 
-**Solution:**
-Increase the limits in your `php.ini` or `.user.ini` file:
+    ```bash
+    # Run all tests
+    php artisan test
 
-```ini
-upload_max_filesize = 64M
-post_max_size = 64M
-```
+    # Run specific test file
+    php artisan test tests/Feature/Bookmarks/BookmarkControllerTest.php
+    ```
 
-_Note: Depending on your server setup (e.g., Laravel Herd, Nginx, Apache), you may need to restart the PHP service for changes to take effect._
+5. Commit your changes (`git commit -m 'Add amazing feature'`).
+6. Push to the branch (`git push origin feature/amazing-feature`).
+7. Open a Pull Request.
 
 ## 📄 License
 
-This project is open-source and licensed under the [MIT permissions](LICENSE).
+MIT License.
