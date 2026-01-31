@@ -40,7 +40,13 @@ touch database/database.sqlite
 php artisan migrate --seed
 ```
 
-### 4. Build & Run
+### 4. Storage Link
+
+```bash
+php artisan storage:link
+```
+
+### 5. Build & Run
 
 ```bash
 npm run build
