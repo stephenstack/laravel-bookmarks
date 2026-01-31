@@ -128,6 +128,22 @@ chown -R www-data:www-data storage bootstrap/cache
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## ❓ Troubleshooting
+
+### File Upload Issues (Logos/Backgrounds)
+
+If uploaded images (logos, backgrounds) do not appear or save as "null", your PHP `upload_max_filesize` or `post_max_size` settings may be too low (default is often 2MB).
+
+**Solution:**
+Increase the limits in your `php.ini` or `.user.ini` file:
+
+```ini
+upload_max_filesize = 64M
+post_max_size = 64M
+```
+
+_Note: Depending on your server setup (e.g., Laravel Herd, Nginx, Apache), you may need to restart the PHP service for changes to take effect._
+
 ## 📄 License
 
 This project is open-source and licensed under the [MIT permissions](LICENSE).

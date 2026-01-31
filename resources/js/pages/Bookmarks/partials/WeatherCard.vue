@@ -127,7 +127,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="flex items-center gap-4 rounded-xl border bg-card p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+    <div class="flex items-center gap-4 rounded-xl border bg-card p-4 cursor-pointer hover:bg-accent/50 transition-colors h-[88px]">
         <div class="flex size-10 items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
             <component :is="weatherIcon" class="size-5" />
         </div>

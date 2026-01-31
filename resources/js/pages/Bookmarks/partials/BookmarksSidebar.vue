@@ -28,11 +28,14 @@ import {
 } from '@/components/ui/sidebar';
 import { useBookmarksStore } from '@/composables/useBookmarksStore';
 import { cn } from '@/lib/utils';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { getIconColorClass, getTagColorClass } from '@/lib/colors';
 import { logout } from '@/routes';
 import * as LucideIcons from 'lucide-vue-next';
+import AppLogo from '@/components/AppLogo.vue';
 import { computed, ref } from 'vue';
+
+const isAdmin = computed(() => usePage().props.auth?.user?.is_admin);
 
 const { state: store, setSelectedCollection, toggleTag, clearTags, setPageMode, setFilterType, openCollectionModal, openSearch } = useBookmarksStore();
 
@@ -60,15 +63,26 @@ const isNavItemActive = (href: string) => {
 };
 
 const getCollectionIcon = (iconName: string) => {
-    // Basic mapping for legacy or simple names
-    const mapping: Record<string, any> = {
-        'book-open': LucideIcons.BookOpen,
-    };
-    
-    if (mapping[iconName]) return mapping[iconName];
-    
-    // Dynamic resolution
-    return (LucideIcons as any)[iconName] || LucideIcons.Folder;
+    if (!iconName) return LucideIcons.Folder;
+
+    // Check direct match first (PascalCase)
+    if ((LucideIcons as any)[iconName]) {
+        return (LucideIcons as any)[iconName];
+    }
+
+    // Attempt normalized (kebab/space -> Pascal)
+    if (iconName.includes('-') || iconName.includes(' ')) {
+        const pascalName = iconName
+            .split(/[- ]+/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join('');
+        
+        if ((LucideIcons as any)[pascalName]) {
+            return (LucideIcons as any)[pascalName];
+        }
+    }
+
+    return LucideIcons.Folder;
 };
 
 
@@ -147,8 +161,8 @@ const getCollectionIcon = (iconName: string) => {
                 </DropdownMenu>
             </div>
             -->
-            <Link href="/" class="flex items-center justify-center py-2 transition-opacity hover:opacity-80">
-                 <img src="/images/rconfig-logos/rConfig-logo-and-icon/rconfig_logo_and_icon_with_strapline_white.svg" alt="rConfig" class="h-14 md:h-12 w-auto" />
+            <Link href="/" class="px-4 py-2">
+                <AppLogo />
             </Link>
         </SidebarHeader>
 

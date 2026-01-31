@@ -1,16 +1,40 @@
 <script setup lang="ts">
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const settings = computed(() => page.props.site_settings as any);
+const siteTitle = computed(() => settings.value?.title || 'Laravel Starter Kit');
 </script>
 
 <template>
-    <div
-        class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
-    >
-        <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
+    <div v-if="settings?.logo_light || settings?.logo_dark" class="flex items-center justify-center h-full w-full">
+        <!-- Light Mode Logo -->
+        <img 
+            v-if="settings.logo_light"
+            :src="settings.logo_light"
+            :alt="siteTitle"
+            class="h-full w-auto object-contain transition-opacity dark:hidden"
+        />
+        <!-- Dark Mode Logo -->
+        <img 
+            v-if="settings.logo_dark"
+            :src="settings.logo_dark"
+            :alt="siteTitle"
+            class="h-full w-auto object-contain transition-opacity hidden dark:block"
+        />
+        <!-- Fallback: If only Light exists, show it in Dark mode too -->
+        <img 
+            v-if="settings.logo_light && !settings.logo_dark"
+            :src="settings.logo_light"
+            :alt="siteTitle"
+            class="h-full w-auto object-contain transition-opacity hidden dark:block"
+        />
     </div>
-    <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold"
-            >Laravel Starter Kit</span
-        >
+
+    <div v-else class="flex items-center justify-center">
+        <div class="flex items-center justify-center h-10 px-4 bg-muted/50 rounded-md border-2 border-dashed border-muted-foreground/20 text-muted-foreground font-black tracking-widest select-none uppercase text-xs">
+            LOGO
+        </div>
     </div>
 </template>

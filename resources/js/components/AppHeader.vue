@@ -62,18 +62,18 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const rightNavItems: NavItem[] = [
+const rightNavItems = computed<NavItem[]>(() => [
     {
         title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
+        href: (page.props.site_settings as any)?.repo_url || 'https://github.com/stephenstack/laravel-bookmarks',
         icon: Folder,
     },
     {
         title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
+        href: (page.props.site_settings as any)?.repo_url || 'https://github.com/stephenstack/laravel-bookmarks',
         icon: BookOpen,
     },
-];
+]);
 </script>
 
 <template>

@@ -38,14 +38,27 @@ interface WeatherConfig {
     longitude: number;
 }
 
+import type { ClockStyle } from '@/components/StyledClock.vue';
+
+// ... imports ...
+
 interface ClockConfig {
     enabled: boolean;
     format: '12h' | '24h';
+    variant: ClockStyle;
 }
 
 const isConfigOpen = ref(false);
 
 // Card definitions (never serialized)
+const clockStyles: { value: ClockStyle; label: string }[] = [
+    { value: 'minimal', label: 'Minimal Modern' },
+    { value: 'digital-led', label: 'Classic LED' },
+    { value: 'retro', label: 'Retro Terminal' },
+    { value: 'bold', label: 'Bold Dashboard' },
+    { value: 'soft', label: 'Soft Ambient' },
+];
+
 const cardDefinitions: DashboardCard[] = [
     {
         id: 'total',
@@ -108,13 +121,16 @@ const loadConfig = (): { cards: DashboardCard[]; weather: WeatherConfig; clock: 
             return {
                 cards,
                 weather: stored.weather,
-                clock: stored.clock || { enabled: false, format: '12h' },
+                clock: {
+                    enabled: stored.clock?.enabled ?? false,
+                    format: stored.clock?.format ?? '12h',
+                    variant: stored.clock?.variant ?? 'minimal',
+                },
             };
         }
     } catch (e) {
         console.error('Failed to load dashboard config:', e);
     }
-    
     
     // Default configuration
     return {
@@ -128,6 +144,7 @@ const loadConfig = (): { cards: DashboardCard[]; weather: WeatherConfig; clock: 
         clock: {
             enabled: false,
             format: '12h',
+            variant: 'minimal',
         },
     };
 };
@@ -235,7 +252,7 @@ const selectCity = (city: typeof popularCities[0]) => {
                 :is="card.clickable && card.href ? Link : 'div'"
                 :href="card.href"
                 :class="[
-                    'flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors',
+                    'flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors h-[88px]',
                     card.clickable ? 'cursor-pointer hover:bg-accent/50' : ''
                 ]"
                 @click="handleCardClick(card)"
@@ -265,6 +282,15 @@ const selectCity = (city: typeof popularCities[0]) => {
                     :longitude="config.weather.longitude"
                 />
             </a>
+
+            <!-- Clock Card -->
+            <div v-if="config.clock.enabled">
+                <ClockCard
+                    :format="config.clock.format"
+                    @update:format="val => config.clock.format = val"
+                    :variant="config.clock.variant"
+                />
+            </div>
         </div>
         
         <!-- Configuration Dialog -->
@@ -390,6 +416,57 @@ const selectCity = (city: typeof popularCities[0]) => {
                                         Find lat/long on LatLong.net
                                     </a>
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clock Configuration -->
+                    <div>
+                        <div class="mb-3 flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="clock-enabled"
+                                v-model="config.clock.enabled"
+                                class="h-4 w-4 rounded border-gray-300"
+                            />
+                            <label
+                                for="clock-enabled"
+                                class="flex items-center gap-2 text-sm font-semibold cursor-pointer"
+                            >
+                                <Clock class="size-4" />
+                                Clock Card
+                            </label>
+                        </div>
+                        
+                        <div v-if="config.clock.enabled" class="space-y-3 pl-6">
+                            <div class="space-y-2">
+                                <Label>Clock Style</Label>
+                                <div class="flex flex-wrap gap-2">
+                                    <div
+                                        v-for="style in clockStyles"
+                                        :key="style.value"
+                                        @click="config.clock.variant = style.value"
+                                        :class="[
+                                            'cursor-pointer rounded-md border px-3 py-2 text-sm transition-all hover:bg-accent',
+                                            config.clock.variant === style.value 
+                                                ? 'bg-primary text-primary-foreground border-primary' 
+                                                : 'bg-background'
+                                        ]"
+                                    >
+                                        {{ style.label }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    id="clock-format"
+                                    :checked="config.clock.format === '24h'"
+                                    @change="(e) => config.clock.format = (e.target as HTMLInputElement).checked ? '24h' : '12h'"
+                                    class="h-4 w-4 rounded border-gray-300"
+                                />
+                                <label for="clock-format" class="text-sm">Use 24-hour format</label>
                             </div>
                         </div>
                     </div>

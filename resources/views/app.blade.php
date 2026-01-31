@@ -20,6 +20,10 @@
             })();
         </script>
 
+        <script>
+            window.appName = @json($site_title ?? config('app.name', 'Laravel'));
+        </script>
+
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
             html {
@@ -31,10 +35,19 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ $site_title ?? config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        @if($site_favicon_light ?? false)
+            <link rel="icon" href="{{ $site_favicon_light }}" media="(prefers-color-scheme: light)">
+        @endif
+        @if($site_favicon_dark ?? false)
+            <link rel="icon" href="{{ $site_favicon_dark }}" media="(prefers-color-scheme: dark)">
+        @endif
+
+        @if(!($site_favicon_light ?? false) && !($site_favicon_dark ?? false))
+            <link rel="icon" href="/favicon.ico" sizes="any">
+            <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        @endif
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">

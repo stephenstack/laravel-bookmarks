@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('bookmarks/archive', [BookmarkController::class, 'index'])->defaults('view', 'archive')->name('bookmarks.archive');
     Route::get('bookmarks/trash', [BookmarkController::class, 'index'])->defaults('view', 'trash')->name('bookmarks.trash');
     Route::get('bookmarks/collection/{slug}', [BookmarkController::class, 'index'])->name('bookmarks.collection');
+    Route::get('bookmarks/tags/{tag}', [BookmarkController::class, 'index'])->name('bookmarks.tag');
     
     Route::post('bookmarks/reorder', [BookmarkController::class, 'reorder'])->name('bookmarks.reorder');
     Route::post('bookmarks/preferences', [BookmarkController::class, 'updatePreferences'])->name('bookmarks.preferences');
@@ -35,6 +36,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('bookmarks', BookmarkController::class)->only(['store', 'update', 'destroy']);
     Route::resource('collections', App\Http\Controllers\Bookmarks\CollectionController::class)->only(['store', 'update', 'destroy']);
     Route::resource('tags', App\Http\Controllers\Bookmarks\TagController::class)->only(['store', 'update', 'destroy']);
+});
+
+Route::middleware(['auth', 'verified', App\Http\Middleware\EnsureUserIsAdmin::class])->group(function () {
+    Route::get('admin/settings', [App\Http\Controllers\Admin\SiteSettingsController::class, 'edit'])->name('admin.settings');
+    Route::post('admin/settings', [App\Http\Controllers\Admin\SiteSettingsController::class, 'update'])->name('admin.settings.update');
+    Route::post('admin/company-bookmarks', [App\Http\Controllers\Admin\SiteSettingsController::class, 'updateCompanyBookmarks'])->name('admin.company-bookmarks.update');
+    Route::post('admin/interrogate-url', [App\Http\Controllers\Admin\SiteSettingsController::class, 'interrogateUrl'])->name('admin.interrogate-url');
 });
 
 require __DIR__.'/settings.php';

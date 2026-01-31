@@ -8,6 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePage } from '@inertiajs/vue3';
 import { useBookmarksStore } from '@/composables/useBookmarksStore';
 import { 
     X, 
@@ -28,6 +29,8 @@ import { computed, ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import BookmarkCard from './BookmarkCard.vue';
 import StatsCards from './StatsCards.vue';
+
+const page = usePage();
 
 const {
     state: store,
@@ -67,7 +70,20 @@ const backgroundSettings = computed(() => {
     else if (store.pageMode === 'trash') pageKey = 'trash';
     else if (store.selectedCollection !== 'all') pageKey = String(store.selectedCollection);
 
-    // Try to get from user preferences first (for system pages or overrides)
+    // ONLY the Company Page ('company-resources') is restricted to Site Settings
+    const isCompanyPage = currentCollectionObject.value?.slug === 'company-resources' || store.selectedCollection === 'company-resources';
+    
+    if (isCompanyPage) {
+        const siteSettings = (page.props.site_settings as any);
+        if (siteSettings?.bg_image) {
+            return {
+                background_image: siteSettings.bg_image,
+                background_opacity: siteSettings.bg_opacity ?? 100
+            };
+        }
+    }
+
+    // Try to get from user preferences (for All Bookmarks, Favorites, etc.)
     const prefSettings = store.userPreferences.backgrounds?.[pageKey];
     if (prefSettings?.background_image) return prefSettings;
 
@@ -214,15 +230,16 @@ const onDragEnd = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" class="w-56">
                                 <DropdownMenuLabel>{{ store.selectedCollection === 'all' ? 'Page Settings' : 'Collection Settings' }}</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                
+                                <DropdownMenuSeparator v-if="store.selectedCollection === 'all' || !currentCollectionObject?.is_system" />
                                 <DropdownMenuItem v-if="store.selectedCollection === 'all'" @click="openPageSettings" class="cursor-pointer">
                                      <ImageIcon class="mr-2 size-4" />
                                      Background Settings
                                 </DropdownMenuItem>
                                 
-                                <template v-else>
-                                    <DropdownMenuItem @click="handleEdit" class="cursor-pointer">
+
+                                
+                                <template v-if="store.selectedCollection !== 'all'">
+                                    <DropdownMenuItem v-if="!currentCollectionObject?.is_system" @click="handleEdit" class="cursor-pointer">
                                         <Pencil class="mr-2 size-4" />
                                         Edit Collection
                                     </DropdownMenuItem>

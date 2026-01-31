@@ -32,4 +32,8 @@ class Bookmark extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
+
+    protected $casts = [
+        'is_favorite' => 'boolean',
+    ];
 }

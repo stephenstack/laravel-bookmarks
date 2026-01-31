@@ -176,7 +176,7 @@ const handleSearchInput = (e: Event) => {
 
                 <Button variant="ghost" size="icon" as-child>
                     <a
-                        href="https://github.com/ln-dev7/square-ui"
+                        :href="(($page.props as any).site_settings?.repo_url) || 'https://github.com/stephenstack/laravel-bookmarks'"
                         target="_blank"
                         rel="noopener noreferrer"
                     >

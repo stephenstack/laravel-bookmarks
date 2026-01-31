@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\Setting;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -42,6 +43,15 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'site_settings' => [
+                'title' => Setting::get('site_title', config('app.name')),
+                'logo_light' => Setting::get('site_logo_light'),
+                'logo_dark' => Setting::get('site_logo_dark'),
+                'favicon' => Setting::get('site_favicon'),
+                'bg_image' => Setting::get('background_image'),
+                'bg_opacity' => Setting::get('background_opacity', 100),
+                'repo_url' => Setting::get('site_repo_url', 'https://github.com/stephenstack/laravel-bookmarks'),
+            ],
         ];
     }
 }

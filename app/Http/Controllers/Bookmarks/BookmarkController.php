@@ -9,12 +9,13 @@ use App\Models\Bookmark;
 use App\Models\Collection;
 use App\Models\CompanyBookmark;
 use App\Models\Tag;
+use App\Models\Setting;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
 class BookmarkController extends Controller
 {
-    public function index(Request $request, $slug = null)
+    public function index(Request $request, $slug = null, $tag = null)
     {
         $user = Auth::user();
         
@@ -43,10 +44,10 @@ class BookmarkController extends Controller
         // Company Collection (virtual)
         $companyCollection = [
             'id' => 'company-resources',
-            'name' => 'Company Resources',
+            'name' => Setting::get('company_collection_title', 'Company Resources'),
             'slug' => 'company-resources',
-            'icon' => 'Building',
-            'color' => 'blue',
+            'icon' => Setting::get('company_collection_icon', 'Building'),
+            'color' => Setting::get('company_collection_color', 'blue'),
             'is_system' => true,
             'count' => $companyBookmarks->count(),
         ];
@@ -54,6 +55,7 @@ class BookmarkController extends Controller
         // Determine initial view based on route
         $initialView = null;
         $initialCollection = null;
+        $initialTag = null;
         
         if ($slug) {
             // Find collection by slug
@@ -62,6 +64,11 @@ class BookmarkController extends Controller
                 $initialCollection = (string) $collection->id;
             } elseif ($slug === 'company-resources') {
                 $initialCollection = 'company-resources';
+            }
+        } elseif ($tag) {
+            $tagModel = $tags->firstWhere('slug', $tag);
+            if ($tagModel) {
+                $initialTag = $tagModel->id;
             }
         } elseif ($view = $request->route()->defaults['view'] ?? null) {
             if ($view === 'all') {
@@ -87,6 +94,7 @@ class BookmarkController extends Controller
             }),
             'initialView' => $initialView,
             'initialCollection' => $initialCollection,
+            'initialTag' => $initialTag,
         ]);
     }
 

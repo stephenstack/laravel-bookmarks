@@ -19,69 +19,7 @@
     Can be renamed in site settings
 ☐ Update Github link on resources\js\pages\Bookmarks\partials\BookmarksHeader.vue
 ☐ Ico to be set in the site settings page
-
-Prompt: Digital Clock Component with User-Selectable Styles
-
-You are a frontend engineer building a reusable Digital Clock component for a modern dashboard application.
-
-Goal
-Build a configurable digital clock component that supports multiple user-selectable visual styles and can be embedded anywhere in the dashboard.
-
-Core Requirements
-
-Displays current time in real-time (HH:MM:SS)
-
-Supports 12h and 24h formats
-
-Time updates every second using an efficient timer
-
-Uses the client’s local timezone by default
-
-Styling Variants (user-selectable)
-Implement at least the following digital styles:
-
-Classic Digital (7-segment LED) – red or green LED look
-
-Minimal Modern – clean sans-serif, subtle glow
-
-Terminal / Retro – monospace, CRT-style glow
-
-Bold Dashboard – large digits, high contrast
-
-Soft / Ambient – rounded font, low contrast, calm colors
-
-Styles must be switchable via a style prop or config object.
-
-Customization Options
-
-Font size (small / medium / large or px-based)
-
-Primary color
-
-Background (transparent or solid)
-
-Optional seconds display toggle
-
-Optional blinking colon toggle
-
-Technical Constraints
-
-Implement as a single reusable component
-
-No external date/time libraries
-
-Clean separation between logic and presentation
-
-Easy to theme and extend
-
-No global side effects
-
-Output
-
-Component code
-
-Style definitions per variant
-
-Example usage showing switching styles at runtime
-
-Prefer clarity, maintainability, and dashboard-ready aesthetics over novelty.
+ ☐ Console command to crete first admin user with laravel mpoorot for details such as name, email and password
+ ☐ need email setup for resets etc..
+ ☐ On first load, opens site, settings, and does not allow to leave settings without setting up companu colection name and some bookmarks
+ ☐ fix this resources\js\components\AppLogo.vue

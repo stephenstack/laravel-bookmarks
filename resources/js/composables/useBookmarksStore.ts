@@ -96,6 +96,10 @@ export function useBookmarksStore() {
         state.selectedTags = [];
     };
 
+    const setSelectedTags = (tags: number[]) => {
+        state.selectedTags = tags;
+    };
+
     const setSearchQuery = (query: string) => {
         state.searchQuery = query;
     };
@@ -416,6 +420,7 @@ export function useBookmarksStore() {
         setSelectedCollection,
         toggleTag,
         clearTags,
+        setSelectedTags,
         setSearchQuery,
         setViewMode,
         setSortBy,
