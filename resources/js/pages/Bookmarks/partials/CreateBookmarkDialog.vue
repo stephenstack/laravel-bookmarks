@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { useBookmarksStore } from '@/composables/useBookmarksStore';
 import { getTagColorClass } from '@/lib/colors';
 import { router } from '@inertiajs/vue3';
-import { Check, Plus, X } from 'lucide-vue-next';
+import { Check, Plus, X, Wand2, Loader2 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import axios from 'axios';
 
 const { state: store, closeBookmarkModal } = useBookmarksStore();
 
@@ -32,8 +33,35 @@ const form = ref({
     url: '',
     collection_id: 'all', 
     description: '',
+    favicon: '',
+    image_url: '',
     tags: [] as number[],
 });
+
+const isInterrogating = ref(false);
+
+const interrogate = async () => {
+    if (!form.value.url) return;
+    
+    isInterrogating.value = true;
+    try {
+        const response = await axios.post('/bookmarks/interrogate-url', { url: form.value.url });
+        const data = response.data;
+        
+        form.value.title = data.title || form.value.title;
+        form.value.description = data.description || form.value.description;
+        form.value.favicon = data.favicon || form.value.favicon;
+        form.value.image_url = data.image_url || form.value.image_url;
+        
+        // Auto-save after interrogation if it's an existing bookmark
+        // Or if the user just wants the quick add experience
+        handleSubmit();
+    } catch (error) {
+        console.error('Interrogation failed:', error);
+    } finally {
+        isInterrogating.value = false;
+    }
+};
 
 const isCreatingTag = ref(false);
 const newTagName = ref('');
@@ -84,6 +112,8 @@ watch(
                 url: bookmark.url,
                 collection_id: bookmark.collection_id ? String(bookmark.collection_id) : 'all',
                 description: bookmark.description || '',
+                favicon: bookmark.favicon || '',
+                image_url: bookmark.image_url || '',
                 tags: bookmark.tags ? bookmark.tags.map(t => Number(t.id)) : [],
             };
         } else {
@@ -92,6 +122,8 @@ watch(
                 url: '',
                 collection_id: 'all',
                 description: '',
+                favicon: '',
+                image_url: '',
                 tags: [],
             };
         }
@@ -169,13 +201,26 @@ const toggleCreateTag = () => {
             <form @submit.prevent="handleSubmit" class="grid gap-4 py-4">
                 <div class="grid gap-2">
                     <Label htmlFor="url">URL</Label>
-                    <Input
-                        id="url"
-                        v-model="form.url"
-                        placeholder="https://example.com"
-                        required
-                        :disabled="store.editingBookmark?.is_company"
-                    />
+                    <div class="flex gap-2">
+                        <Input
+                            id="url"
+                            v-model="form.url"
+                            placeholder="https://example.com"
+                            required
+                            :disabled="store.editingBookmark?.is_company"
+                        />
+                        <Button 
+                            v-if="!store.editingBookmark?.is_company"
+                            type="button" 
+                            variant="secondary" 
+                            size="icon" 
+                            @click="interrogate"
+                            :disabled="isInterrogating"
+                        >
+                            <Wand2 v-if="!isInterrogating" class="size-4" />
+                            <Loader2 v-else class="size-4 animate-spin" />
+                        </Button>
+                    </div>
                 </div>
                 <div class="grid gap-2">
                     <Label htmlFor="title">Title</Label>
@@ -186,6 +231,32 @@ const toggleCreateTag = () => {
                         required
                         :disabled="store.editingBookmark?.is_company"
                     />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="grid gap-2">
+                        <Label>Favicon URL</Label>
+                        <Input v-model="form.favicon" placeholder="Icon URL" :disabled="store.editingBookmark?.is_company" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label>Image URL</Label>
+                        <Input v-model="form.image_url" placeholder="Background/OG Image" :disabled="store.editingBookmark?.is_company" />
+                    </div>
+                </div>
+                <div v-if="form.image_url" class="relative aspect-video w-full rounded-lg overflow-hidden border">
+                     <img :src="form.image_url" class="w-full h-full object-cover" />
+                     <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white">
+                         <div class="font-bold text-sm truncate">{{ form.title }}</div>
+                         <div class="text-[10px] opacity-80 truncate">{{ form.description }}</div>
+                     </div>
+                     <button 
+                         v-if="!store.editingBookmark?.is_company"
+                         type="button"
+                         @click="form.image_url = ''; handleSubmit()" 
+                         class="absolute top-2 right-2 size-7 flex items-center justify-center rounded-full bg-black/50 hover:bg-destructive text-white transition-colors backdrop-blur-sm shadow-md"
+                         title="Remove Image"
+                     >
+                         <Trash2 class="size-3.5" />
+                     </button>
                 </div>
                 <div class="grid gap-2">
                     <Label htmlFor="collection">Collection</Label>

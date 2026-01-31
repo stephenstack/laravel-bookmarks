@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Trash2, Plus, Save, Building, Globe, Settings as SettingsIcon, LayoutTemplate } from 'lucide-vue-next';
+import { Trash2, Plus, Save, Building, Globe, Mail, AlertTriangle, Send, LayoutTemplate, Search, Loader2, Wand2 } from 'lucide-vue-next';
+import axios from 'axios';
 
 
 
@@ -23,7 +24,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const activeTab = ref('general');
+const getTabFromUrl = () => {
+    if (typeof window === 'undefined') return 'general';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'general';
+};
+
+const activeTab = ref(getTabFromUrl());
+
+watch(activeTab, (newTab) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', newTab);
+    window.history.replaceState({}, '', url);
+});
 
 const settingsForm = useForm({
     site_title: props.settings.site_title || '',
@@ -35,6 +48,8 @@ const settingsForm = useForm({
     company_collection_title: props.settings.company_collection_title || '',
     company_collection_color: props.settings.company_collection_color || '',
     company_collection_icon: props.settings.company_collection_icon || '',
+    company_tag_name: props.settings.company_tag_name || 'Company',
+    company_tag_color: props.settings.company_tag_color || 'blue',
     background_image: props.settings.background_image || '',
     background_opacity: props.settings.background_opacity || 100,
 });
@@ -49,6 +64,8 @@ const addBookmark = () => {
         title: '',
         url: '',
         description: '',
+        favicon: '',
+        image_url: '',
     });
 };
 
@@ -66,6 +83,33 @@ const saveBookmarks = () => {
     bookmarksForm.post('/admin/company-bookmarks', {
         preserveScroll: true,
     });
+};
+
+const interrogatingIndex = ref<number | null>(null);
+
+const interrogate = async (index: number) => {
+    const bookmark = bookmarksForm.bookmarks[index];
+    if (!bookmark.url) return;
+
+    interrogatingIndex.value = index;
+    
+    try {
+        const response = await axios.post('/admin/interrogate-url', { url: bookmark.url });
+        const data = response.data;
+        
+        bookmark.title = data.title || bookmark.title;
+        bookmark.description = data.description || bookmark.description;
+        bookmark.favicon = data.favicon || bookmark.favicon;
+        bookmark.image_url = data.image_url || bookmark.image_url;
+        
+        // Auto-save the whole collection after interrogation
+        saveBookmarks();
+    } catch (error: any) {
+        console.error('Interrogation failed:', error);
+        alert(error.response?.data?.error || 'Failed to interrogate URL');
+    } finally {
+        interrogatingIndex.value = null;
+    }
 };
 
 watch(
@@ -104,16 +148,44 @@ const availableColors = [
     { name: 'pink', class: 'bg-pink-500' },
     { name: 'rose', class: 'bg-rose-500' },
 ];
+
+const testEmailAddress = ref('');
+const testingEmail = ref(false);
+
+const sendTestEmail = async () => {
+    if (!testEmailAddress.value) return;
+    testingEmail.value = true;
+    try {
+        await axios.post('/admin/test-email', { email: testEmailAddress.value });
+        alert('Test email sent! Check your inbox.');
+    } catch (e: any) {
+        alert(e.response?.data?.error || 'Failed to send test email. Check your .env configuration.');
+    } finally {
+        testingEmail.value = false;
+    }
+};
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Site Settings" />
-        <div class="p-6 max-w-5xl mx-auto space-y-6">
+        <div class="p-6 max-w-7xl mx-auto space-y-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">Admin Settings</h1>
                     <p class="text-muted-foreground">Manage global site configuration and company resources.</p>
+                </div>
+            </div>
+            <div v-if="settings.setup_required" class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-4 flex gap-4 items-start animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="size-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
+                    <AlertTriangle class="size-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                    <h3 class="font-bold text-amber-900 dark:text-amber-100 uppercase tracking-wider text-xs">Initial Setup Required</h3>
+                    <p class="text-sm text-amber-800 dark:text-amber-200 mt-1 max-w-2xl">
+                        To complete your installation, you must configure your <span class="font-bold">Company Collection</span> name and add at least one <span class="font-bold">Company Bookmark</span>.
+                        Other areas of the site will remain restricted until this is complete.
+                    </p>
                 </div>
             </div>
 
@@ -123,8 +195,8 @@ const availableColors = [
                     <button
                         @click="activeTab = 'general'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px hover:text-foreground',
-                            activeTab === 'general' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                            'w-48 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px hover:text-foreground flex justify-center',
+                            activeTab === 'general' ? 'border-primary text-foreground bg-primary/5' : 'border-transparent text-muted-foreground'
                         ]"
                     >
                         <div class="flex items-center gap-2">
@@ -135,8 +207,8 @@ const availableColors = [
                     <button
                         @click="activeTab = 'company'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px hover:text-foreground',
-                            activeTab === 'company' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                            'w-48 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px hover:text-foreground flex justify-center',
+                            activeTab === 'company' ? 'border-primary text-foreground bg-primary/5' : 'border-transparent text-muted-foreground'
                         ]"
                     >
                         <div class="flex items-center gap-2">
@@ -147,13 +219,25 @@ const availableColors = [
                     <button
                         @click="activeTab = 'bookmarks'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px hover:text-foreground',
-                            activeTab === 'bookmarks' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                            'w-48 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px hover:text-foreground flex justify-center',
+                            activeTab === 'bookmarks' ? 'border-primary text-foreground bg-primary/5' : 'border-transparent text-muted-foreground'
                         ]"
                     >
                         <div class="flex items-center gap-2">
                             <LayoutTemplate class="size-4" />
                             Company Bookmarks
+                        </div>
+                    </button>
+                    <button
+                        @click="activeTab = 'mail'"
+                        :class="[
+                            'w-48 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px hover:text-foreground flex justify-center',
+                            activeTab === 'mail' ? 'border-primary text-foreground bg-primary/5' : 'border-transparent text-muted-foreground'
+                        ]"
+                    >
+                        <div class="flex items-center gap-2">
+                            <Mail class="size-4" />
+                            Mail Settings
                         </div>
                     </button>
                 </div>
@@ -262,7 +346,37 @@ const availableColors = [
                                 <Input v-model="settingsForm.company_collection_color" placeholder="e.g. blue, red, emerald" />
                             </div>
                         </CardContent>
+                    </Card>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Company Tag</CardTitle>
+                            <CardDescription>Configure the automatic tag applied to all company bookmarks.</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="grid gap-2">
+                                <Label>Tag Name</Label>
+                                <Input v-model="settingsForm.company_tag_name" placeholder="e.g. COMPANY" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label>Tag Color</Label>
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    <button
+                                        v-for="color in availableColors"
+                                        :key="color.name"
+                                        type="button"
+                                        @click="settingsForm.company_tag_color = color.name"
+                                        class="size-6 rounded-full border transition-all"
+                                        :class="[
+                                            color.class,
+                                            settingsForm.company_tag_color === color.name ? 'ring-2 ring-primary ring-offset-2' : 'hover:scale-110'
+                                        ]"
+                                        :title="color.name"
+                                    />
+                                </div>
+                                <Input v-model="settingsForm.company_tag_color" placeholder="e.g. blue, red, emerald" />
+                            </div>
+                        </CardContent>
                     </Card>
 
                     <Card>
@@ -329,8 +443,16 @@ const availableColors = [
                 <div v-if="activeTab === 'bookmarks'" class="space-y-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Company Bookmarks</CardTitle>
-                            <CardDescription>These bookmarks appear for EVERY user in the company collection.</CardDescription>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <CardTitle>Company Bookmarks</CardTitle>
+                                    <CardDescription>These bookmarks appear for EVERY user in the company collection.</CardDescription>
+                                </div>
+                                <div v-if="interrogatingIndex !== null" class="flex items-center gap-2 text-sm text-amber-600 animate-pulse">
+                                    <Loader2 class="size-4 animate-spin" />
+                                    Interrogating page... This may take a minute.
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div v-if="bookmarksForm.bookmarks.length === 0" class="text-center py-8 text-muted-foreground">
@@ -338,21 +460,62 @@ const availableColors = [
                             </div>
                             <div v-for="(bookmark, index) in bookmarksForm.bookmarks" :key="index" class="p-4 border rounded-lg bg-card/50 space-y-4">
                                 <div class="flex items-start justify-between gap-4">
-                                     <div class="grid gap-4 flex-1 md:grid-cols-2">
+                                     <div class="grid gap-4 flex-1 md:grid-cols-2 lg:grid-cols-4">
                                         <div class="grid gap-2">
                                             <Label>Title</Label>
                                             <Input v-model="bookmark.title" placeholder="Bookmark Title" />
                                         </div>
                                         <div class="grid gap-2">
                                             <Label>URL</Label>
-                                            <Input v-model="bookmark.url" placeholder="https://example.com" />
+                                            <div class="flex gap-2">
+                                                <Input v-model="bookmark.url" placeholder="https://example.com" />
+                                                <Button 
+                                                    variant="secondary" 
+                                                    size="icon" 
+                                                    @click="interrogate(index)" 
+                                                    :disabled="interrogatingIndex !== null"
+                                                    title="Interrogate URL"
+                                                >
+                                                    <Wand2 v-if="interrogatingIndex !== index" class="size-4" />
+                                                    <Loader2 v-else class="size-4 animate-spin" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <div class="col-span-2 grid gap-2">
+                                        <div class="grid gap-2">
+                                            <Label>Favicon</Label>
+                                            <div class="flex gap-2">
+                                                <Input v-model="bookmark.favicon" placeholder="Icon URL" />
+                                                <div v-if="bookmark.favicon" class="size-9 p-1 border rounded bg-white flex items-center justify-center">
+                                                    <img :src="bookmark.favicon" class="size-full object-contain" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="grid gap-2">
+                                            <Label>Image URL (OG / Screenshot)</Label>
+                                            <Input v-model="bookmark.image_url" placeholder="Background/OG Image URL" />
+                                        </div>
+                                        <div class="md:col-span-2 lg:col-span-4 grid gap-2">
                                             <Label>Description</Label>
                                             <Input v-model="bookmark.description" placeholder="Optional description" />
                                         </div>
+                                        <div v-if="bookmark.image_url" class="md:col-span-2 lg:col-span-4">
+                                            <Label class="mb-1 block">Preview</Label>
+                                            <div class="relative aspect-[21/9] w-full max-w-2xl rounded-lg overflow-hidden border">
+                                                 <img :src="bookmark.image_url" class="w-full h-full object-cover" />
+                                                 <div class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
+                                                     <div class="font-bold truncate">{{ bookmark.title }}</div>
+                                                     <div class="text-xs opacity-80 truncate">{{ bookmark.description }}</div>
+                                                 </div>
+                                                 <button 
+                                                     @click="bookmark.image_url = ''; saveBookmarks()" 
+                                                     class="absolute top-2 right-2 size-8 flex items-center justify-center rounded-full bg-black/50 hover:bg-destructive text-white transition-colors backdrop-blur-sm"
+                                                 >
+                                                     <Trash2 class="size-4" />
+                                                 </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <Button variant="destructive" size="icon" @click="removeBookmark(index)" class="shrink-0 mt-8">
+                                    <Button variant="destructive" size="icon" @click="removeBookmark(index)" class="shrink-0">
                                         <Trash2 class="size-4" />
                                     </Button>
                                 </div>
@@ -366,6 +529,52 @@ const availableColors = [
                                 <Save class="mr-2 size-4" /> Save Bookmarks
                             </Button>
                         </CardFooter>
+                    </Card>
+                </div>
+
+                <!-- Mail Tab -->
+                <div v-if="activeTab === 'mail'" class="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Mail Configuration</CardTitle>
+                            <CardDescription>Configure SMTP settings for system notifications and password resets.</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-6">
+                            <div class="p-4 bg-muted/50 rounded-lg border text-sm space-y-3">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <Globe class="size-4 text-primary" />
+                                    Environment Setup
+                                </h3>
+                                <p>To enable email functionality, update the following keys in your <code>.env</code> file:</p>
+                                <pre class="p-3 bg-black text-emerald-400 rounded text-xs overflow-x-auto">
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="no-reply@yourdomain.com"
+MAIL_FROM_NAME="${APP_NAME}"</pre>
+                                <p class="text-muted-foreground italic">Important: Run <code>php artisan config:clear</code> after editing the .env file.</p>
+                            </div>
+
+                            <div class="space-y-4 border-t pt-6">
+                                <h3 class="font-bold">Test Delivery</h3>
+                                <div class="grid gap-4">
+                                    <div class="grid gap-2">
+                                        <Label>Recipient Email Address</Label>
+                                        <div class="flex gap-2">
+                                            <Input v-model="testEmailAddress" placeholder="test@example.com" type="email" />
+                                            <Button @click="sendTestEmail" :disabled="testingEmail || !testEmailAddress" class="shrink-0">
+                                                <Send v-if="!testingEmail" class="mr-2 size-4" />
+                                                <Loader2 v-else class="mr-2 size-4 animate-spin" />
+                                                Send Test
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
             </div>

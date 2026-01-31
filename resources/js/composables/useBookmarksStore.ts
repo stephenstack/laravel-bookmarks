@@ -82,7 +82,7 @@ export function useBookmarksStore() {
         }
     };
 
-    const toggleTag = (tagId: number) => {
+    const toggleTag = (tagId: number | string) => {
         if (state.selectedTags.includes(tagId)) {
             state.selectedTags = state.selectedTags.filter(
                 (id) => id !== tagId,
@@ -96,7 +96,7 @@ export function useBookmarksStore() {
         state.selectedTags = [];
     };
 
-    const setSelectedTags = (tags: number[]) => {
+    const setSelectedTags = (tags: (number | string)[]) => {
         state.selectedTags = tags;
     };
 

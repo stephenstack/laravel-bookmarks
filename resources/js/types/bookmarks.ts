@@ -1,5 +1,5 @@
 export interface Tag {
-    id: number;
+    id: number | string;
     user_id?: number | null; // Nullable for global/system tags
     name: string;
     slug: string;
@@ -33,6 +33,7 @@ export interface Bookmark {
     url: string;
     description: string | null;
     favicon: string | null;
+    image_url?: string | null;
     is_favorite: boolean;
     order?: number;
     status?: 'active' | 'archived' | 'trashed';
@@ -50,7 +51,7 @@ export interface BookmarksState {
     archivedBookmarks: Bookmark[];
     trashedBookmarks: Bookmark[];
     selectedCollection: string;
-    selectedTags: number[]; // Change to number IDs ideally, or retain string if we use UUIDs or string IDs. Controller returns numbers for real DB.
+    selectedTags: (number | string)[]; // Supports virtual string IDs
     searchQuery: string;
     viewMode: 'grid' | 'list';
     sortBy: 'date-newest' | 'date-oldest' | 'alpha-az' | 'alpha-za' | 'custom';

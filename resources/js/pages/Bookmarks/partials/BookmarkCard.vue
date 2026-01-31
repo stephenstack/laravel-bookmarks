@@ -8,6 +8,12 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useBookmarksStore } from '@/composables/useBookmarksStore';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { Bookmark } from '@/types/bookmarks';
 import {
     Archive,
@@ -93,6 +99,7 @@ const handleOpenUrl = () => {
 
         <div class="flex items-center gap-1">
             <Button
+                v-if="!bookmark.is_company"
                 variant="ghost"
                 size="icon"
                 class="h-8 w-8"
@@ -181,6 +188,7 @@ const handleOpenUrl = () => {
     >
         <div class="absolute right-3 top-3 z-10 flex items-center gap-1">
             <Button
+                v-if="!bookmark.is_company"
                 variant="secondary"
                 size="icon"
                 class="h-8 w-8 bg-background/80 backdrop-blur-sm"
@@ -212,15 +220,15 @@ const handleOpenUrl = () => {
                         <ExternalLink class="mr-2 size-4" />
                         Open in new tab
                     </DropdownMenuItem>
-                    <DropdownMenuItem @click="openBookmarkModal(bookmark)">
+                    <DropdownMenuItem v-if="!bookmark.is_company" @click="openBookmarkModal(bookmark)">
                         <Pencil class="mr-2 size-4" />
                         Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem @click="openBookmarkModal(bookmark)">
+                    <DropdownMenuItem v-if="!bookmark.is_company" @click="openBookmarkModal(bookmark)">
                         <Tag class="mr-2 size-4" />
                         Add Tags
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator v-if="!bookmark.is_company" />
                     
                     <!-- Archive/Unarchive -->
                     <DropdownMenuItem
@@ -267,51 +275,63 @@ const handleOpenUrl = () => {
             </DropdownMenu>
         </div>
 
-        <button class="w-full cursor-pointer text-left" @click="handleOpenUrl">
-            <div
-                class="flex h-32 items-center justify-center bg-gradient-to-br from-muted/50 to-muted"
-            >
-                <div
-                    class="flex size-12 items-center justify-center rounded-xl bg-background shadow-sm"
-                >
-                    <img
-                        :src="bookmark.favicon || ''"
-                        :alt="bookmark.title"
-                        width="32"
-                        height="32"
-                        class="size-8"
-                    />
-                </div>
-            </div>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <button class="w-full cursor-pointer text-left" @click="handleOpenUrl">
+                        <div
+                            class="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-muted/50 to-muted group-hover:from-muted group-hover:to-muted/30 transition-all duration-500"
+                        >
+                            <!-- Image Background -->
+                            <div 
+                                v-if="bookmark.image_url"
+                                class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                                :style="{ backgroundImage: `url(${bookmark.image_url})` }"
+                            ></div>
+                            <!-- Theme Overlay -->
+                            <div 
+                                v-if="bookmark.image_url"
+                                class="absolute inset-0 z-1 bg-black/5 dark:bg-black/20 group-hover:bg-transparent transition-colors duration-500 shadow-inner"
+                            ></div>
+                            
+                            <div
+                                class="relative z-10 flex size-12 items-center justify-center rounded-xl bg-background/90 backdrop-blur-sm shadow-lg ring-1 ring-white/20"
+                            >
+                                <img
+                                    :src="bookmark.favicon || '/placeholder-icon.svg'"
+                                    :alt="bookmark.title"
+                                    width="32"
+                                    height="32"
+                                    class="size-8"
+                                />
+                            </div>
+                        </div>
 
-            <div class="p-4 flex flex-col h-[130px]">
-                <div class="flex items-start justify-between gap-2 mb-2">
-                    <h3 class="line-clamp-1 font-medium text-sm sm:text-base">{{ bookmark.title }}</h3>
-                </div>
-                
-                <div class="flex-1 overflow-hidden">
-                    <p class="line-clamp-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        <div class="p-4 flex flex-col h-[60px] relative group/info">
+                            <div class="flex items-start justify-between gap-2 overflow-hidden">
+                                <h3 class="truncate font-medium text-sm sm:text-base group-hover:text-primary transition-colors">{{ bookmark.title }}</h3>
+                            </div>
+                            
+                            <div v-if="bookmarkTags.length > 0" class="flex flex-wrap gap-1 mt-auto">
+                                <span
+                                    v-for="tag in bookmarkTags.slice(0, 3)"
+                                    :key="tag.id"
+                                    class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-medium border border-transparent"
+                                    :class="getTagColorClass(tag.color)"
+                                >
+                                    {{ tag.name }}
+                                </span>
+                            </div>
+                        </div>
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center" class="max-w-[300px] p-3 space-y-1">
+                    <p class="font-bold text-sm">{{ bookmark.title }}</p>
+                    <p class="text-xs text-muted-foreground leading-relaxed">
                         {{ bookmark.description || 'No description available.' }}
                     </p>
-                </div>
-
-                <div v-if="bookmarkTags.length > 0" class="flex flex-wrap gap-1 mt-auto pt-3">
-                    <span
-                        v-for="tag in bookmarkTags.slice(0, 3)"
-                        :key="tag.id"
-                        class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] sm:text-[10px] font-medium border border-transparent"
-                        :class="getTagColorClass(tag.color)"
-                    >
-                        {{ tag.name }}
-                    </span>
-                    <span
-                        v-if="bookmarkTags.length > 3"
-                        class="py-0.5 text-[10px] text-muted-foreground"
-                    >
-                        +{{ bookmarkTags.length - 3 }}
-                    </span>
-                </div>
-            </div>
-        </button>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     </div>
 </template>

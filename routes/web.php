@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('bookmarks/collection/{slug}', [BookmarkController::class, 'index'])->name('bookmarks.collection');
     Route::get('bookmarks/tags/{tag}', [BookmarkController::class, 'index'])->name('bookmarks.tag');
     
+    Route::post('bookmarks/interrogate-url', [BookmarkController::class, 'interrogateUrl'])->name('bookmarks.interrogate-url');
     Route::post('bookmarks/reorder', [BookmarkController::class, 'reorder'])->name('bookmarks.reorder');
     Route::post('bookmarks/preferences', [BookmarkController::class, 'updatePreferences'])->name('bookmarks.preferences');
     Route::post('bookmarks/upload-image', [App\Http\Controllers\Bookmarks\ImageUploadController::class, 'upload'])->name('bookmarks.upload-image');
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'verified', App\Http\Middleware\EnsureUserIsAdmin::cl
     Route::post('admin/settings', [App\Http\Controllers\Admin\SiteSettingsController::class, 'update'])->name('admin.settings.update');
     Route::post('admin/company-bookmarks', [App\Http\Controllers\Admin\SiteSettingsController::class, 'updateCompanyBookmarks'])->name('admin.company-bookmarks.update');
     Route::post('admin/interrogate-url', [App\Http\Controllers\Admin\SiteSettingsController::class, 'interrogateUrl'])->name('admin.interrogate-url');
+    Route::post('admin/test-email', [App\Http\Controllers\Admin\SiteSettingsController::class, 'testEmail'])->name('admin.test-email');
 });
 
 require __DIR__.'/settings.php';

@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
                 'bg_image' => Setting::get('background_image'),
                 'bg_opacity' => Setting::get('background_opacity', 100),
                 'repo_url' => Setting::get('site_repo_url', 'https://github.com/stephenstack/laravel-bookmarks'),
+                'setup_required' => !Setting::get('company_collection_title') || \App\Models\CompanyBookmark::count() === 0,
             ],
         ];
     }

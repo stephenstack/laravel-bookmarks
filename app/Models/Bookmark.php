@@ -13,6 +13,7 @@ class Bookmark extends Model
         'url',
         'description',
         'favicon',
+        'image_url',
         'is_favorite',
         'order',
         'status',

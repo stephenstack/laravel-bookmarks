@@ -9,14 +9,29 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Http;
 use App\Models\Setting;
 use App\Models\CompanyBookmark;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TestMail;
 
 class SiteSettingsController extends Controller
 {
+    public function testEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        
+        try {
+            Mail::to($request->email)->send(new TestMail());
+            return response()->json(['message' => 'Email sent']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
     public function edit()
     {
         $settings = Setting::all()->keyBy('key')->map(function($setting) {
              return Setting::get($setting->key);
         });
+
+        $settings['setup_required'] = !Setting::get('company_collection_title') || CompanyBookmark::count() === 0;
 
         $companyBookmarks = CompanyBookmark::orderBy('id')->get();
 
@@ -70,14 +85,36 @@ class SiteSettingsController extends Controller
         $url = $request->url;
 
         try {
+            // Use Microlink for higher quality extraction and actual screenshots
+            // It provides title, description, logo, and screenshot in one go.
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            ])->timeout(15)->get($url);
+            ])->timeout(20)->get("https://api.microlink.io/", [
+                'url' => $url,
+                'screenshot' => true,
+                'meta' => true
+            ]);
 
-            if (!$response->successful()) {
-                return response()->json(['error' => 'Failed to fetch the page.'], 400);
+            if ($response->successful()) {
+                $data = $response->json()['data'] ?? [];
+                
+                $image = $data['image']['url'] ?? $data['screenshot']['url'] ?? null;
+                
+                // If Microlink didn't find an image, use Thum.io for a clean site screenshot (no WP logo)
+                if (!$image) {
+                    $image = "https://image.thum.io/get/width/1200/crop/675/" . $url;
+                }
+
+                return response()->json([
+                    'title' => trim($data['title'] ?? ''),
+                    'description' => trim($data['description'] ?? ''),
+                    'image_url' => $image,
+                    'favicon' => $data['logo']['url'] ?? "https://www.google.com/s2/favicons?sz=128&domain_url=" . urlencode($url),
+                ]);
             }
 
+            // Fallback to manual scraping if Microlink fails
+            $response = Http::timeout(10)->get($url);
             $html = $response->body();
             $dom = new \DOMDocument();
             @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
@@ -85,32 +122,26 @@ class SiteSettingsController extends Controller
 
             $title = $xpath->query('//title')->item(0)?->nodeValue;
             $description = $xpath->query('//meta[@name="description"]/@content')->item(0)?->nodeValue 
-                        ?? $xpath->query('//meta[@property="og:description"]/@content')->item(0)?->nodeValue;
-            $ogImage = $xpath->query('//meta[@property="og:image"]/@content')->item(0)?->nodeValue;
+                        ?? $xpath->query('//meta[@property="og:description"]/@content')->item(0)?->nodeValue
+                        ?? $xpath->query('//meta[@name="twitter:description"]/@content')->item(0)?->nodeValue;
             
-            // Favicon logic
-            $favicon = $xpath->query('//link[@rel="icon" or @rel="shortcut icon"]/@href')->item(0)?->nodeValue;
+            $image = $xpath->query('//meta[@property="og:image"]/@content')->item(0)?->nodeValue
+                    ?? $xpath->query('//meta[@name="twitter:image"]/@content')->item(0)?->nodeValue;
             
-            if (!$ogImage) {
-                // Fallback to WordPress mshots for screenshot
-                $ogImage = "https://s0.wp.com/mshots/v1/" . urlencode($url) . "?w=1200";
-            }
-
-            if ($favicon && !str_starts_with($favicon, 'http')) {
-                $parsedUrl = parse_url($url);
-                $baseUrl = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
-                $favicon = $baseUrl . (str_starts_with($favicon, '/') ? '' : '/') . $favicon;
+            // If still no image found in meta, use Thum.io for a clean screenshot
+            if (!$image) {
+                $image = "https://image.thum.io/get/width/1200/crop/675/" . $url;
             }
 
             return response()->json([
                 'title' => trim($title ?? ''),
                 'description' => trim($description ?? ''),
-                'image_url' => $ogImage,
-                'favicon' => $favicon,
+                'image_url' => $image,
+                'favicon' => "https://www.google.com/s2/favicons?sz=128&domain_url=" . urlencode($url),
             ]);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Could not interrogate URL: ' . $e->getMessage()], 500);
         }
     }
 
