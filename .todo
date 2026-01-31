@@ -1,0 +1,87 @@
+✔ draggable cards on both grid and list view. Also, sort filers on top of view to org by date, name, ec. @done(26-01-31 14:42)
+✔ ctrl+k search @done(26-01-31 14:12)
+✔ icon new collection @done(26-01-31 14:08)
+✔ New Collection color select does not color icon @done(26-01-31 14:13)
+✔ Company collection must not be deleted @done(26-01-31 14:13)
+✔ light dark, check in the original resource/book mark, for the light dark siwtch, and bring that over to the new design @done(26-01-31 14:36)
+✔ changeabled bg, with opacity setting @done(26-01-31 16:58)
+✔ / should not load welcome page ir should redirect to /dashboard, unless logged out of course, we redirect to login @done(26-01-31 16:59)
+✔ Need to be able to trash and archive bookmarks, funcationality not present or working. @done(26-01-31 17:10)
+☐ Click the tags, does not load company bookmarks. might be beucase they are not seeded with tags.???
+☐ Favs/ Archive not loading bookmarks
+☐ ONce any book mark is added to a collection, a job should be create to srape the page, for the title, description, and ico, OG image (or screenshot if no OG image). Imahe should be card BG if grid style. Title an dDesc can be card toolip on hover text. SHoudl alos aim fro light and dark mode optimised image content if possible. 
+
+
+☐ Dark, light icons and images for uploads in site settings
+☐ if publichsed seeded data should be generic, not specific to me
+☐ for published. Site settings page i.e. logo, site name, etc.
+☐ Company collection settins in site settings
+    Can be renamed in site settings
+☐ Update Github link on resources\js\pages\Bookmarks\partials\BookmarksHeader.vue
+☐ Ico to be set in the site settings page
+
+Prompt: Digital Clock Component with User-Selectable Styles
+
+You are a frontend engineer building a reusable Digital Clock component for a modern dashboard application.
+
+Goal
+Build a configurable digital clock component that supports multiple user-selectable visual styles and can be embedded anywhere in the dashboard.
+
+Core Requirements
+
+Displays current time in real-time (HH:MM:SS)
+
+Supports 12h and 24h formats
+
+Time updates every second using an efficient timer
+
+Uses the client’s local timezone by default
+
+Styling Variants (user-selectable)
+Implement at least the following digital styles:
+
+Classic Digital (7-segment LED) – red or green LED look
+
+Minimal Modern – clean sans-serif, subtle glow
+
+Terminal / Retro – monospace, CRT-style glow
+
+Bold Dashboard – large digits, high contrast
+
+Soft / Ambient – rounded font, low contrast, calm colors
+
+Styles must be switchable via a style prop or config object.
+
+Customization Options
+
+Font size (small / medium / large or px-based)
+
+Primary color
+
+Background (transparent or solid)
+
+Optional seconds display toggle
+
+Optional blinking colon toggle
+
+Technical Constraints
+
+Implement as a single reusable component
+
+No external date/time libraries
+
+Clean separation between logic and presentation
+
+Easy to theme and extend
+
+No global side effects
+
+Output
+
+Component code
+
+Style definitions per variant
+
+Example usage showing switching styles at runtime
+
+Prefer clarity, maintainability, and dashboard-ready aesthetics over novelty.
