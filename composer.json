@@ -1,13 +1,37 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "stephenstack/laravel-bookmarks",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "A modern, self-hosted bookmark manager and personal start page built with Laravel, Vue.js, and Inertia.js",
     "keywords": [
         "laravel",
-        "framework"
+        "vue",
+        "inertia",
+        "bookmarks",
+        "bookmark-manager",
+        "start-page",
+        "homepage",
+        "dashboard",
+        "self-hosted",
+        "productivity"
     ],
     "license": "MIT",
+    "homepage": "https://github.com/stephenstack/laravel-bookmarks",
+    "support": {
+        "issues": "https://github.com/stephenstack/laravel-bookmarks/issues",
+        "source": "https://github.com/stephenstack/laravel-bookmarks",
+        "docs": "https://github.com/stephenstack/laravel-bookmarks#readme"
+    },
+    "authors": [
+        {
+            "name": "Stephen Stack",
+            "email": "your@email.com",
+            "homepage": "https://github.com/stephenstack"
+        }
+    ],
+    "versions": {
+        "laravel-bookmarks": "1.0.0"
+    },
     "require": {
         "php": "^8.2",
         "inertiajs/inertia-laravel": "^2.0",
