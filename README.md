@@ -61,7 +61,7 @@ To create your first admin user, use the built-in command:
 php artisan make:admin
 ```
 
-This will prompt you for your name, email, and password.
+This will prompt you for your name, email, and password. The created user will have admin privileges.
 
 ## 📧 Email Setup
 

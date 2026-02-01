@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Bookmarks;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TestMail;
 use App\Models\Bookmark;
 use App\Models\Collection;
-use App\Models\Tag;
 use App\Models\CompanyBookmark;
 use App\Models\Setting;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\TestMail;
+use Inertia\Inertia;
 
 class BookmarkController extends Controller
 {
@@ -40,17 +40,17 @@ class BookmarkController extends Controller
             $favicon = '';
             $parsedUrl = parse_url($request->url);
             $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
-            
+
             if (preg_match('/<link rel="(?:shortcut )?icon" [^>]*?href="(.*?)"/is', $html, $matches)) {
                 $favicon = $matches[1];
             } elseif (preg_match('/<link [^>]*?href="(.*?)" [^>]*?rel="(?:shortcut )?icon"/is', $html, $matches)) {
                 $favicon = $matches[1];
             }
-            
+
             if ($favicon && !filter_var($favicon, FILTER_VALIDATE_URL)) {
                 $favicon = rtrim($baseUrl, '/') . '/' . ltrim($favicon, '/');
             }
-            
+
             if (!$favicon) {
                 $favicon = $baseUrl . '/favicon.ico';
             }
@@ -74,12 +74,12 @@ class BookmarkController extends Controller
     public function index(Request $request, $slug = null, $tag = null)
     {
         $user = Auth::user();
-        
+
         // Fetch User Data - Include trashed so they are available in the store
         $bookmarks = $user->bookmarks()->withTrashed()->orderBy('order')->with(['tags', 'collection'])->get();
         $collections = $user->collections()->orderBy('order')->withCount('bookmarks')->get();
         $tags = $user->tags()->withCount('bookmarks')->get();
-        
+
         // Fetch Company Settings
         $companyTagName = Setting::get('company_tag_name', 'Company');
         $companyTagColor = Setting::get('company_tag_color', 'blue');
@@ -90,9 +90,9 @@ class BookmarkController extends Controller
         ];
 
         $favoriteCompanyBookmarkIds = $user->favoriteCompanyBookmarks()->pluck('company_bookmarks.id')->toArray();
-        
+
         $companyBookmarks = CompanyBookmark::all()->map(function ($item) use ($companyTag, $favoriteCompanyBookmarkIds) {
-             return [
+            return [
                 'id' => 'company-' . $item->id,
                 'title' => $item->title,
                 'url' => $item->url,
@@ -107,7 +107,7 @@ class BookmarkController extends Controller
                 'updated_at' => $item->updated_at,
                 'deleted_at' => null,
                 'status' => 'active'
-             ];
+            ];
         });
 
         $companyCollection = [
@@ -119,12 +119,12 @@ class BookmarkController extends Controller
             'is_system' => true,
             'count' => $companyBookmarks->count(),
         ];
-        
+
         // --- View Detection ---
         $initialView = $request->route('view'); // This comes from defaults() in web.php
         $initialCollection = null;
         $initialTag = null;
-        
+
         if ($slug) {
             if ($slug === 'company-resources') {
                 $initialCollection = 'company-resources';
@@ -143,14 +143,14 @@ class BookmarkController extends Controller
             // Default if we just hit /dashboard or similar
             $initialCollection = 'all';
         }
-        
+
         return Inertia::render('Bookmarks/Index', [
             'initialBookmarks' => $bookmarks->concat($companyBookmarks)->values()->all(),
-            'collections' => $collections->map(function($c) {
+            'collections' => $collections->map(function ($c) {
                 $c->count = $c->bookmarks_count;
                 return $c;
             })->push($companyCollection),
-            'tags' => $tags->map(function($t) {
+            'tags' => $tags->map(function ($t) {
                 $t->count = $t->bookmarks_count;
                 return $t;
             })->push(array_merge($companyTag, ['count' => $companyBookmarks->count()])),
@@ -291,7 +291,7 @@ class BookmarkController extends Controller
     {
         $user = Auth::user();
         $preferences = $user->preferences ?? [];
-        
+
         $user->update([
             'preferences' => array_merge($preferences, $request->all())
         ]);
@@ -303,9 +303,9 @@ class BookmarkController extends Controller
     {
         $user = Auth::user();
         $id = str_replace('company-', '', $id);
-        
+
         $exists = $user->favoriteCompanyBookmarks()->where('company_bookmark_id', $id)->exists();
-        
+
         if ($exists) {
             $user->favoriteCompanyBookmarks()->detach($id);
         } else {
