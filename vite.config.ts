@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => {
     const devHost = env.VITE_DEV_HOST || '127.0.0.1';
     const devPort = Number(env.VITE_DEV_PORT || 5173);
     const devOrigin = env.VITE_DEV_SERVER_URL || `http://${devHost}:${devPort}`;
+    const devHmrHost = env.VITE_DEV_HMR_HOST || devHost;
+    const devHmrProtocol = env.VITE_DEV_HMR_PROTOCOL || 'wss';
 
     return {
         server: {
@@ -16,6 +18,15 @@ export default defineConfig(({ mode }) => {
             port: devPort,
             strictPort: true,
             origin: devOrigin,
+            cors: {
+                origin: env.VITE_DEV_CORS_ORIGIN || env.APP_URL || 'https://bookmarks.dev.rconfig.com',
+                credentials: true,
+            },
+            hmr: {
+                host: devHmrHost,
+                protocol: devHmrProtocol,
+                port: devPort,
+            },
             https: {
                 key:
                     env.VITE_DEV_KEY_PATH ||
