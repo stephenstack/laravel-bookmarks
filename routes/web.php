@@ -47,6 +47,9 @@ Route::middleware(['auth', 'verified', App\Http\Middleware\EnsureUserIsAdmin::cl
     Route::post('admin/company-bookmarks', [App\Http\Controllers\Admin\SiteSettingsController::class, 'updateCompanyBookmarks'])->name('admin.company-bookmarks.update');
     Route::post('admin/interrogate-url', [App\Http\Controllers\Admin\SiteSettingsController::class, 'interrogateUrl'])->name('admin.interrogate-url');
     Route::post('admin/test-email', [App\Http\Controllers\Admin\SiteSettingsController::class, 'testEmail'])->name('admin.test-email');
+    Route::get('admin/users', [App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('admin.users');
+    Route::patch('admin/users/{user}', [App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::post('admin/users/invite', [App\Http\Controllers\Admin\UserManagementController::class, 'invite'])->name('admin.users.invite');
 });
 
 require __DIR__ . '/settings.php';

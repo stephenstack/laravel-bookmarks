@@ -106,7 +106,7 @@ php artisan key:generate
 
 # 3. Database - or edit the .env to use MySQL/PostgreSQL if preferred
 touch database/database.sqlite
-php artisan migrate  # Or php artisan migrate --seed to add sample data
+php artisan migrate  # Or `php artisan migrate:fresh --force && php artisan db:seed --class=DemoDataSeeder` to add sample data
 
 # 4. Storage link
 php artisan storage:link
