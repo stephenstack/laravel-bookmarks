@@ -1,4 +1,3 @@
-````markdown
 # 🏠 Homepage - Your Self-Hosted Start Page
 
 > **Built in a weekend, polished for production.** A lightning-fast, beautifully designed bookmark manager and personal dashboard that actually feels good to use.
@@ -115,7 +114,6 @@ php artisan storage:link
 npm run build
 php artisan serve
 ```
-````
 
 **That's it!** Open `http://localhost:8000` in your browser.
 
@@ -250,19 +248,3 @@ This project is open source and available under the [MIT License](LICENSE).
   <br>
   <sub>If you find this useful, consider giving it a ⭐</sub>
 </p>
-```
-
-Perfect! The hosted version callout is now prominently placed right after the badges and before the main content. This:
-
-1. **Catches early attention** - People see it immediately
-2. **Creates FOMO** - "Others might be interested, I should vote too"
-3. **Validates demand** - Easy way to gauge if a SaaS version makes sense
-4. **Builds community** - Gets people engaging with the repo early
-
-**Don't forget to:**
-
-1. Create and pin an issue titled something like "🚀 Interest Check: Hosted/SaaS Version"
-2. In that issue, explain what the hosted version would include (pricing tiers, features, etc.)
-3. Monitor engagement to decide if it's worth building
-
-Good luck with the launch! 🎉
