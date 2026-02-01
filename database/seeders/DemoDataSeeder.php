@@ -35,7 +35,7 @@ class DemoDataSeeder extends Seeder
             $user = User::create([
                 'name' => 'Demo Admin User',
                 'email' => 'admin@domain.com',
-                'password' => bcrypt('admin'),
+                'password' => bcrypt('password'),
                 'is_admin' => true,
             ]);
         }
