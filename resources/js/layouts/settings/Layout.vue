@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -30,7 +30,20 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Admin Settings',
+        href: '/admin/settings',
+    },
+    {
+        title: 'User Management',
+        href: '/admin/users',
+    },
+];
+
 const { isCurrentUrl } = useCurrentUrl();
+const page = usePage();
+const isAdmin = (page.props.auth as any)?.user?.is_admin;
 </script>
 
 <template>
@@ -48,6 +61,23 @@ const { isCurrentUrl } = useCurrentUrl();
                 >
                     <Button
                         v-for="item in sidebarNavItems"
+                        :key="toUrl(item.href)"
+                        variant="ghost"
+                        :class="[
+                            'w-full justify-start',
+                            { 'bg-muted': isCurrentUrl(item.href) },
+                        ]"
+                        as-child
+                    >
+                        <Link :href="item.href">
+                            <component :is="item.icon" class="h-4 w-4" />
+                            {{ item.title }}
+                        </Link>
+                    </Button>
+                    <Separator v-if="isAdmin" class="my-2" />
+                    <Button
+                        v-for="item in adminNavItems"
+                        v-if="isAdmin"
                         :key="toUrl(item.href)"
                         variant="ghost"
                         :class="[

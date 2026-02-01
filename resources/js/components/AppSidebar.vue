@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Settings2 } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Settings2, Users } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -34,6 +34,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Site Settings',
             href: '/admin/settings',
             icon: Settings2,
+        });
+        items.push({
+            title: 'User Management',
+            href: '/admin/users',
+            icon: Users,
         });
     }
 
