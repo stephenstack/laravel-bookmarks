@@ -89,6 +89,7 @@ This project was **vibe coded** in a few hours as a passion project—inspired b
 - Composer
 - Node.js 18+
 - SQLite (or MySQL/PostgreSQL)
+- Some basic knowledge on setting up Laravel apps, DBs, and web servers
 
 ### Installation (5 minutes)
 
@@ -97,25 +98,26 @@ This project was **vibe coded** in a few hours as a passion project—inspired b
 git clone https://github.com/stephenstack/laravel-bookmarks.git
 cd laravel-bookmarks
 composer install
-npm install
+npm install # You dont need to run this if you plan to use pre-built assets
 
 # 2. Environment setup
 cp .env.example .env
 php artisan key:generate
 
-# 3. Database
+# 3. Database - or edit the .env to use MySQL/PostgreSQL if preferred
 touch database/database.sqlite
-php artisan migrate --seed
+php artisan migrate  # Or php artisan migrate --seed to add sample data
 
 # 4. Storage link
 php artisan storage:link
+chown -R apache storage/ bootstrap/
 
-# 5. Build and run
+# 5. Build and run - optional if you want to customize assets and develop further
 npm run build
 php artisan serve
 ```
 
-**That's it!** Open `http://localhost:8000` in your browser.
+**That's it!** Open `http://localhost:8000` in your browser. Or configure your web server (Nginx/Apache) to point to the `public/` directory.
 
 ### Create Your Admin User
 
