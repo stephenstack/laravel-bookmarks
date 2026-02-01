@@ -7,7 +7,7 @@
 [![Inertia](https://img.shields.io/badge/Inertia.js-2-9553E9)](https://inertiajs.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**[Live Demo](#) • [Screenshots](#screenshots) • [Documentation](#) • [Report Bug](https://github.com/stephenstack/laravel-bookmarks/issues)**
+**[Live Demo](https://laravel-bookmarks-demo.rconfig.com/) • [Screenshots](#screenshots) • [Documentation](#) • [Report Bug](https://github.com/stephenstack/laravel-bookmarks/issues)**
 
 ---
 
@@ -32,12 +32,14 @@ This project was **vibe coded** in a few hours as a passion project—inspired b
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/dashboard.png" alt="Dashboard" /></td>
-    <td><img src="docs/screenshots/bookmarks.png" alt="Bookmarks" /></td>
+    <td><img src="public/images/brand/demo/Screenshot1.png" alt="Screenshot 1" /></td>
+    <td><img src="public/images/brand/demo/Screenshot2.png" alt="Screenshot 2" /></td>
+    <td><img src="public/images/brand/demo/Screenshot3.png" alt="Screenshot 3" /></td>
   </tr>
   <tr>
-    <td align="center"><b>Dashboard View</b></td>
-    <td align="center"><b>Bookmark Collections</b></td>
+    <td align="center"><b>Screenshot 1</b></td>
+    <td align="center"><b>Screenshot 2</b></td>
+    <td align="center"><b>Screenshot 3</b></td>
   </tr>
 </table>
 
