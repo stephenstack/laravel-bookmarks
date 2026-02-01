@@ -2,7 +2,7 @@
 
 > **Built in a weekend, polished for production.** A lightning-fast, beautifully designed bookmark manager and personal dashboard that actually feels good to use.
 
-[![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?logo=laravel)](https://laravel.com)
+[![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel)](https://laravel.com)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3-4FC08D?logo=vue.js)](https://vuejs.org)
 [![Inertia](https://img.shields.io/badge/Inertia.js-2-9553E9)](https://inertiajs.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
